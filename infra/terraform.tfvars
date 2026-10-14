@@ -1,1 +1,0 @@
-budget_email = "ch.nourelhouda.chc.com"
