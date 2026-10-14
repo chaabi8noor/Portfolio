@@ -1,0 +1,48 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # lets you re-run a deploy from the Actions tab
+
+permissions:
+  id-token: write # allows the job to request a GitHub OIDC token
+  contents: read
+
+concurrency: # never two deploys at once; a new one waits for the previous
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Lint, typecheck, tests and build: a broken build never reaches the site.
+      - run: npm run check
+
+      # Exchanges the OIDC token for 1-hour credentials of the deploy role. No stored keys.
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: eu-west-3
+
+      # New hashed assets go up first, so the new index.html never points at missing files.
+      # Old hashed files are kept (no --delete): visitors with a cached old page still work.
+      - name: Upload hashed assets
+        run: aws s3 sync dist/assets "s3://${{ vars.SITE_BUCKET }}/assets"
+
+      - name: Upload pages and other files
+        run: aws s3 sync dist "s3://${{ vars.SITE_BUCKET }}" --delete --exclude "assets/*"
+
+      # Make CloudFront fetch the new version ("/*" counts as one path; 1,000 paths/month are free).
+      - name: Invalidate CloudFront cache
+        run: aws cloudfront create-invalidation --distribution-id "${{ vars.DISTRIBUTION_ID }}" --paths "/*"
