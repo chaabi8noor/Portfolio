@@ -1,4 +1,3 @@
-# Covers the whole AWS account, not just this site.
 resource "aws_budgets_budget" "monthly" {
   name         = "portfolio-monthly-cost"
   budget_type  = "COST"
