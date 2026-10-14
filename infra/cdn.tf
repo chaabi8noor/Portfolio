@@ -89,6 +89,7 @@ resource "aws_cloudfront_distribution" "site" {
   enabled             = true
   comment             = "Portfolio site"
   default_root_object = "index.html"
+  aliases             = local.site_names
   is_ipv6_enabled     = true
   http_version        = "http2and3"
   price_class         = "PriceClass_100" # cheapest edge locations (North America + Europe)
@@ -134,6 +135,8 @@ resource "aws_cloudfront_distribution" "site" {
   }
 
   viewer_certificate {
-    cloudfront_default_certificate = true # free *.cloudfront.net HTTPS certificate
+    acm_certificate_arn      = aws_acm_certificate_validation.site.certificate_arn
+    ssl_support_method       = "sni-only"     # free; "vip" (dedicated IP) costs $600/month
+    minimum_protocol_version = "TLSv1.2_2021" # refuse old, insecure TLS versions
   }
 }

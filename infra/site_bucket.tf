@@ -1,7 +1,7 @@
 # Private bucket holding the built site. Only CloudFront can read it.
 resource "aws_s3_bucket" "site" {
-  bucket_prefix = "nour-portfolio-site-" # AWS appends a unique suffix
-  force_destroy = true                   # contents are rebuilt from git, safe to delete
+  bucket        = "nour-portfolio-site-3bbc7b27839daac46ccb52b6ef"
+  force_destroy = true # contents are rebuilt from git, safe to delete
 }
 
 resource "aws_s3_bucket_public_access_block" "site" {
