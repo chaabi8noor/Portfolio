@@ -1,7 +1,7 @@
 variable "github_repo" {
   description = "The only GitHub repository allowed to deploy (owner/name)."
   type        = string
-  default     = "chaabi8noor/Portfolio"
+  default     = "chaabi8noor@245599539/Portfolio@1418702834"
 }
 
 # Tells AWS to trust tokens signed by GitHub Actions (one per account).

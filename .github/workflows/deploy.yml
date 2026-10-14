@@ -32,16 +32,6 @@ jobs:
       # Exchanges the OIDC token for 1-hour credentials of the deploy role. No stored keys.
             # TEMPORARY: prints what GitHub's OIDC token claims, to compare with the role's trust policy.
       # Only the claims are printed, never the token. Remove this step once deploys work.
-      - name: Show OIDC token claims (debug)
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const token = await core.getIDToken('sts.amazonaws.com');
-            const claims = JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString());
-            core.info(`sub: ${claims.sub}`);
-            core.info(`aud: ${claims.aud}`);
-            core.info(`repository: ${claims.repository}`);
-            core.info(`ref: ${claims.ref}`);
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
