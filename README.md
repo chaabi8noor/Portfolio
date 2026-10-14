@@ -43,17 +43,24 @@ src/
 tests/            pipeline.test.ts (plain node:assert)
 ```
 
-## Deploy (static hosting)
+## Hosting (AWS, Terraform)
 
-`npm run build` writes `dist/`. It also copies `index.html` to `404.html`, so a host that serves `404.html` for unknown paths (GitHub Pages, for example) can still open case-study deep links like `/work/k8s-autoguard`.
+Live at **https://chaabinourelhouda.com**. Everything is in `infra/`:
 
-- **Root domain** (e.g. `chaabi8noor.github.io` or a custom domain): `npm run build`.
-- **Project subpath** (e.g. `chaabi8noor.github.io/portfolio/`): `BASE_PATH=/portfolio/ npm run build`.
-- **Netlify / Cloudflare Pages:** add a SPA rewrite (`/* /index.html 200`) instead of relying on `404.html`.
+| File | What it defines |
+| --- | --- |
+| `bootstrap/main.tf` | One-time state bucket (versioned, encrypted, private, protected from deletion). Local state. |
+| `versions.tf` | Pinned providers; remote state in S3 with S3-native locking; a `us_east_1` provider for the certificate. |
+| `site_bucket.tf` | Private site bucket; policy lets only this CloudFront distribution read it (OAC). |
+| `cdn.tf` | CloudFront: HTTPS, `/assets/*` vs pages behaviours, response-headers policies (security headers + Cache-Control). |
+| `functions/spa-rewrite.js` | CloudFront Function: extension-less paths → `/index.html`, so deep links work and missing files still 404. |
+| `domain.tf` | ACM certificate (DNS-validated) and Route 53 alias records for the domain and `www`. |
+| `github_oidc.tf` | GitHub OIDC provider + least-privilege deploy role (main branch of this repo only). |
+| `budget.tf` | $5/month budget with email alerts. |
 
-Once the site has a real address, add `<link rel="canonical">` and an absolute `og:image` to `index.html`.
+Make infra changes from `infra/`: `terraform init`, `terraform plan`, `terraform apply`. Copy `terraform.tfvars.example` to `terraform.tfvars` (git-ignored) first.
 
-CI (`.github/workflows/ci.yml`) runs lint, typecheck, test and build on pushes and PRs. It deliberately does not deploy anything.
+Deploys: `.github/workflows/deploy.yml` runs on every push to `main`. It builds and checks the site, assumes the deploy role through OIDC (no stored keys), syncs `dist/` to S3 and invalidates CloudFront. `ci.yml` stays a build check for every push and PR.
 
 ## Asset provenance
 

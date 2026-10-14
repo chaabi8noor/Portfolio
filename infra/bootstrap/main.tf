@@ -77,19 +77,33 @@ resource "aws_s3_bucket_lifecycle_configuration" "state" {
   }
 }
 
-# Refuse any request that isn't over HTTPS.
+# Refuse any request that isn't over HTTPS, and protect the state itself.
 resource "aws_s3_bucket_policy" "state" {
   bucket = aws_s3_bucket.state.id
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [{
-      Sid       = "DenyInsecureTransport"
-      Effect    = "Deny"
-      Principal = "*"
-      Action    = "s3:*"
-      Resource  = [aws_s3_bucket.state.arn, "${aws_s3_bucket.state.arn}/*"]
-      Condition = { Bool = { "aws:SecureTransport" = "false" } }
-    }]
+    Statement = [
+      {
+        Sid       = "DenyInsecureTransport"
+        Effect    = "Deny"
+        Principal = "*"
+        Action    = "s3:*"
+        Resource  = [aws_s3_bucket.state.arn, "${aws_s3_bucket.state.arn}/*"]
+        Condition = { Bool = { "aws:SecureTransport" = "false" } }
+      },
+      {
+        # Added after the original state bucket was deleted and recreated (2026-10-14),
+        # which lost the state. Nobody, admin included, can delete the bucket or wipe
+        # old state versions while this policy is attached; removing it is a deliberate
+        # two-step action. Plain DeleteObject stays allowed: Terraform deletes its
+        # .tflock file to release the lock, and versioning keeps the history anyway.
+        Sid       = "ProtectStateFromDeletion"
+        Effect    = "Deny"
+        Principal = "*"
+        Action    = ["s3:DeleteBucket", "s3:DeleteObjectVersion", "s3:PutLifecycleConfiguration"]
+        Resource  = [aws_s3_bucket.state.arn, "${aws_s3_bucket.state.arn}/*"]
+      },
+    ]
   })
   depends_on = [aws_s3_bucket_public_access_block.state]
 }

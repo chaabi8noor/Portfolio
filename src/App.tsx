@@ -14,6 +14,11 @@ export default function App() {
   const notFound = path !== '/' && !project
   useMotion(path)
 
+  // Keep the canonical URL in step with the route, so case studies aren't treated as duplicates of the homepage.
+  useEffect(() => {
+    document.querySelector('link[rel="canonical"]')?.setAttribute('href', `https://chaabinourelhouda.com${path}`)
+  }, [path])
+
   // Honour a #hash on first load (e.g. a shared link to /#lab).
   useEffect(() => {
     if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView()

@@ -40,8 +40,77 @@ const gh = (repo: string, path = '') =>
 const kao = (path: string) => `https://gitlab.com/kubeaiops/kubeaiops-platform/-/blob/main/${path}`
 const riq = (path: string) => `https://gitlab.com/chaabi8noor/resourceiq/-/blob/main/${path}`
 const riqTree = (path: string) => `https://gitlab.com/chaabi8noor/resourceiq/-/tree/main/${path}`
+const pf = (path: string) => `https://github.com/chaabi8noor/Portfolio/blob/main/${path}`
 
 export const projects: Project[] = [
+  {
+    // Every result below was checked on the live site and in the AWS console on 2026-10-14.
+    slug: 'portfolio-on-aws',
+    title: 'This portfolio, on AWS',
+    kicker: 'Private S3 + CloudFront, Terraform, and keyless deploys from GitHub',
+    kind: 'Personal project',
+    when: 'Oct 2026',
+    accent: 'lilac',
+    summary:
+      'The site you are reading: a Vite/React single-page app served from a private S3 bucket through CloudFront, with HTTPS on a custom domain, strict security headers and deploys from GitHub Actions that use no stored AWS keys. All of it is defined in Terraform.',
+    problem:
+      'Hosting a single-page app looks trivial until the details show up: deep links that 404 on refresh, public buckets, cache rules that serve stale pages, and CI pipelines holding long-lived AWS keys. I wanted the boring, correct version, written as code, for close to nothing a month.',
+    constraints: [
+      'Stay at or near the free tier: one private bucket, CloudFront, a free ACM certificate and a $5 budget alarm.',
+      'No long-lived AWS access keys in CI.',
+      'Every resource in Terraform, with pinned provider versions and remote state.',
+      'The AWS Free plan blocks Route 53 domain registration, so the custom domain came after upgrading the account.',
+    ],
+    contribution: [
+      'Built and applied the Terraform: a bootstrap state bucket, the private site bucket, CloudFront with Origin Access Control, a CloudFront Function, response-headers policies, an ACM certificate, Route 53 records, a GitHub OIDC role and a budget.',
+      'Wrote the GitHub Actions deploy workflow: lint, typecheck, tests and build, then sync to S3 and invalidate CloudFront.',
+      'Moved an inline script into its own file so a strict Content-Security-Policy could be enforced.',
+      'Debugged a failing OIDC trust policy and recovered the Terraform state after the state bucket was recreated.',
+      'Verified the live behaviour: HTTPS, deep links, the private bucket, caching and security headers, and keyless deploys.',
+    ],
+    stack: ['Terraform', 'S3', 'CloudFront', 'CloudFront Functions', 'ACM', 'Route 53', 'IAM OIDC', 'GitHub Actions', 'AWS Budgets'],
+    architecture: {
+      caption: 'Request path (left) and deploy path (right), as defined in infra/.',
+      nodes: [
+        { id: 'visitor', label: 'Visitor', x: 60, y: 190, role: 'A browser requesting https://chaabinourelhouda.com or a deep link such as /work/k8s-autoguard.', evidence: [{ label: 'chaabinourelhouda.com', href: 'https://chaabinourelhouda.com' }] },
+        { id: 'dns', label: 'Route 53', x: 190, y: 80, mine: true, role: 'Hosted zone for the domain. A and AAAA alias records send both the bare domain and www to CloudFront.', evidence: [{ label: 'infra/domain.tf', href: pf('infra/domain.tf') }] },
+        { id: 'acm', label: 'ACM certificate', x: 330, y: 60, mine: true, role: 'Free public certificate for both names, created in us-east-1 (required by CloudFront) and validated automatically through DNS records.', evidence: [{ label: 'infra/domain.tf', href: pf('infra/domain.tf') }, { label: 'us-east-1 provider', href: pf('infra/versions.tf') }] },
+        { id: 'cdn', label: 'CloudFront', x: 330, y: 190, mine: true, role: 'Serves the site over HTTPS (HTTP redirects), with one behaviour for hashed /assets/* and one for everything else, each with its own response-headers policy.', evidence: [{ label: 'infra/cdn.tf', href: pf('infra/cdn.tf') }] },
+        { id: 'fn', label: 'SPA rewrite fn', x: 190, y: 310, mine: true, role: 'CloudFront Function on viewer request: paths without a file extension are rewritten to /index.html, so deep links work while missing files still return 404.', evidence: [{ label: 'spa-rewrite.js', href: pf('infra/functions/spa-rewrite.js') }] },
+        { id: 's3', label: 'Private S3', x: 520, y: 190, mine: true, role: 'Holds the built site. All public access is blocked; the bucket policy lets only this distribution read it, signed through Origin Access Control.', evidence: [{ label: 'infra/site_bucket.tf', href: pf('infra/site_bucket.tf') }] },
+        { id: 'role', label: 'IAM OIDC role', x: 520, y: 60, mine: true, role: 'Trusts GitHub tokens only from this repository’s main branch (pinned by repo and owner IDs). It can only write this bucket and invalidate this distribution.', evidence: [{ label: 'infra/github_oidc.tf', href: pf('infra/github_oidc.tf') }] },
+        { id: 'ci', label: 'GitHub Actions', x: 520, y: 320, mine: true, role: 'On every push to main: lint, typecheck, tests and build, then a 1-hour role session to sync files to S3 and invalidate the CloudFront cache.', evidence: [{ label: 'deploy.yml', href: pf('.github/workflows/deploy.yml') }] },
+      ],
+      edges: [['visitor', 'dns'], ['visitor', 'cdn'], ['dns', 'cdn'], ['acm', 'cdn'], ['fn', 'cdn'], ['cdn', 's3'], ['ci', 'role'], ['role', 's3'], ['role', 'cdn']],
+    },
+    decisions: [
+      { title: 'A CloudFront Function, not an error-page fallback', body: 'Mapping every 403/404 to index.html would also hide genuinely missing files. Rewriting only extension-less paths keeps deep links working and real 404s honest.', source: { label: 'spa-rewrite.js', href: pf('infra/functions/spa-rewrite.js') } },
+      { title: 'Private bucket behind Origin Access Control', body: 'No public bucket and no S3 website endpoint: the bucket policy allows reads only from this distribution’s ARN.', source: { label: 'infra/site_bucket.tf', href: pf('infra/site_bucket.tf') } },
+      { title: 'Caching rules live in Terraform', body: 'Cache-Control is set by response-headers policies (immutable for hashed assets, no-cache for pages) instead of flags scattered across deploy commands.', source: { label: 'infra/cdn.tf', href: pf('infra/cdn.tf') } },
+      { title: 'Keyless deploys with OIDC', body: 'GitHub Actions exchanges a signed token for short-lived credentials. The trust policy pins the repository and owner IDs, so a recreated repo with the same name couldn’t take it over.', source: { label: 'infra/github_oidc.tf', href: pf('infra/github_oidc.tf') } },
+      { title: 'Remote state with S3-native locking', body: 'State sits in a versioned, encrypted, private bucket and uses S3’s own lock file, so no DynamoDB table is needed.', source: { label: 'infra/versions.tf', href: pf('infra/versions.tf') } },
+    ],
+    results: [
+      { text: 'https://chaabinourelhouda.com and www serve the site over HTTPS with an Amazon-issued certificate covering both names; plain HTTP returns a 301 to HTTPS.', source: { label: 'infra/domain.tf', href: pf('infra/domain.tf') } },
+      { text: 'Loading /work/k8s-autoguard directly returns 200 and renders the case study; a missing /assets file still returns 404.', source: { label: 'spa-rewrite.js', href: pf('infra/functions/spa-rewrite.js') } },
+      { text: 'A direct request to the S3 bucket returns 403: content is only reachable through CloudFront.', source: { label: 'infra/site_bucket.tf', href: pf('infra/site_bucket.tf') } },
+      { text: 'Response headers checked on the live site: year-long immutable caching for /assets, no-cache for pages, plus HSTS, CSP, X-Frame-Options DENY, nosniff, Referrer-Policy and Permissions-Policy.', source: { label: 'infra/cdn.tf', href: pf('infra/cdn.tf') } },
+      { text: 'Pushes to main deploy through GitHub Actions with an OIDC role session; the repository stores no AWS secrets.', source: { label: 'deploy.yml', href: pf('.github/workflows/deploy.yml') } },
+      { text: 'Fixed the first deploy’s “Not authorized to perform sts:AssumeRoleWithWebIdentity” by printing the token’s claims: GitHub sent an ID-based subject (owner@id/repo@id), so the trust policy now pins those IDs.', source: { label: 'infra/github_oidc.tf', href: pf('infra/github_oidc.tf') } },
+      { text: 'Recovered from a lost Terraform state by adopting 13 live resources with import blocks. The plan showed 0 to destroy, and the final plan reports no changes.', source: { label: 'recovery commit', href: 'https://github.com/chaabi8noor/Portfolio/commit/f0ad5b4' } },
+    ],
+    notVerified: [
+      'The $5 budget alert is configured but hasn’t fired, so delivery of the alert email isn’t verified.',
+      'No performance measurements (Lighthouse, latency from different regions) have been taken yet.',
+      'Deletion protection for the state bucket is written and planned, but not applied yet.',
+    ],
+    next: [
+      'Run terraform plan in CI on pull requests with a read-only role, so infrastructure changes are reviewed like code.',
+      'Measure performance (Lighthouse on mobile) and add the numbers here.',
+    ],
+    source: { label: 'chaabi8noor/Portfolio', href: 'https://github.com/chaabi8noor/Portfolio' },
+    demo: { label: 'chaabinourelhouda.com', href: 'https://chaabinourelhouda.com' },
+  },
   {
     slug: 'k8s-autoguard',
     title: 'K8s AutoGuard',

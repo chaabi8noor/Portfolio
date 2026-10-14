@@ -29,3 +29,7 @@ dist-ssr
 *.tfstate.*
 *.tfplan
 crash.log
+*.tfvars
+!*.tfvars.example
+*.tfplan
+crash.log
