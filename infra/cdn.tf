@@ -1,4 +1,4 @@
-# OAC: CloudFront signs every request to S3 (SigV4), so the bucket can stay private.
+# OAC: CloudFront signs every request to S3 (SigV4),so the bucket can stay private.
 resource "aws_cloudfront_origin_access_control" "site" {
   name                              = "portfolio-site-oac"
   description                       = "CloudFront signs requests to the private site bucket"
