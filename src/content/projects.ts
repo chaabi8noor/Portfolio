@@ -98,11 +98,11 @@ export const projects: Project[] = [
       { text: 'Pushes to main deploy through GitHub Actions with an OIDC role session; the repository stores no AWS secrets.', source: { label: 'deploy.yml', href: pf('.github/workflows/deploy.yml') } },
       { text: 'Fixed the first deploy’s “Not authorized to perform sts:AssumeRoleWithWebIdentity” by printing the token’s claims: GitHub sent an ID-based subject (owner@id/repo@id), so the trust policy now pins those IDs.', source: { label: 'infra/github_oidc.tf', href: pf('infra/github_oidc.tf') } },
       { text: 'Recovered from a lost Terraform state by adopting 13 live resources with import blocks. The plan showed 0 to destroy, and the final plan reports no changes.', source: { label: 'recovery commit', href: 'https://github.com/chaabi8noor/Portfolio/commit/f0ad5b4' } },
+      { text: 'Then protected the state bucket: the IAM policy simulator returns an explicit deny, even for the admin user, for deleting the bucket, permanently deleting state versions or changing its lifecycle rules, while Terraform’s lock still works.', source: { label: 'infra/bootstrap/main.tf', href: pf('infra/bootstrap/main.tf') } },
     ],
     notVerified: [
       'The $5 budget alert is configured but hasn’t fired, so delivery of the alert email isn’t verified.',
       'No performance measurements (Lighthouse, latency from different regions) have been taken yet.',
-      'Deletion protection for the state bucket is written and planned, but not applied yet.',
     ],
     next: [
       'Run terraform plan in CI on pull requests with a read-only role, so infrastructure changes are reviewed like code.',
