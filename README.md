@@ -64,22 +64,5 @@ CI (`.github/workflows/ci.yml`) runs lint, typecheck, test and build on pushes a
 - No stock art or third-party images are used.
 - Design inspiration: td-tomasfolio.framer.website (layout and rhythm). No artwork or copy was reused; colours, icons and diagrams are original.
 
-## Motion (copied from the reference)
-
-Measured on td-tomasfolio.framer.website and rebuilt with CSS + a small `src/lib/motion.ts`:
-
-- Desktop rails: fixed left "Reach out" rail and right rail with the + menu and vertical wordmark.
-- Hero photo: parallax at 0.4× scroll, clipped by the hero (no entrance animation).
-- Text effect: headings/descriptions reveal letter by letter, statements word by word (`Reveal.tsx`).
-- Capabilities (desktop, mouse): tools hidden until hover; each pill's tint wipes in left→right with its label, 0.2s apart. ASCII icons flicker.
-- Experience: accordion — + rotates to ×, details expand, a dark line sweeps across the divider on hover/open.
-- Links: hover fades in a small square and slides the label 32px right.
-- Project images: scale 1.1× → 1× as they scroll in.
-- Menu: page blurs/dims, then the panel appears top-right; links fade in in sequence.
-- Footer: static 8×14 pixel fade measured from the reference.
-
-Everything respects `prefers-reduced-motion` (content shows immediately, no animation).
-
-## The demo pipeline
 
 The Lab section's pipeline is a **simulation**. `src/lib/pipeline.ts` is a pure state machine with hard-coded, clearly fake logs. It runs no commands, calls no cloud API and reflects no real repository.
