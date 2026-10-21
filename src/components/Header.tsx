@@ -1,22 +1,52 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
-import { identity } from '../content/site'
-import { Link } from '../lib/router'
+import { identity, links } from '../content/site'
+import { href, Link, usePath } from '../lib/router'
+import { Icon, type IconName } from './Icon'
 
-export const NAV = [
-  { to: '/', label: 'Home' },
-  { to: '/#experience', label: 'Experience' },
-  { to: '/#work', label: 'Projects' },
-  { to: '/#lab', label: 'Lab' },
-  { to: '/#contact', label: 'Contact' },
+export const NAV: { to: string; label: string; icon: IconName }[] = [
+  { to: '/#skills', label: 'Skills', icon: 'spark' },
+  { to: '/#toolbox', label: 'Toolbox', icon: 'grid' },
+  { to: '/#experience', label: 'Experience', icon: 'briefcase' },
+  { to: '/#work', label: 'Projects', icon: 'folder' },
+  { to: '/#education', label: 'Education', icon: 'cap' },
 ]
 
-// Layout copied from the reference: on desktop, a fixed left rail with a vertical
-// "Reach out" and a fixed right rail with the + menu and a vertical wordmark.
-// On small screens: a top bar plus a floating "Reach out" pill (rendered in App).
+/** Which home section is on screen, for the nav's active pill. */
+function useActiveSection(path: string) {
+  const [active, setActive] = useState('')
+  useEffect(() => {
+    if (path !== '/') return setActive('')
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) if (e.isIntersecting) setActive(e.target.id)
+      },
+      { rootMargin: '-45% 0px -50% 0px' },
+    )
+    NAV.forEach((n) => {
+      const el = document.getElementById(n.to.split('#')[1])
+      if (el) io.observe(el)
+    })
+    return () => io.disconnect()
+  }, [path])
+  return active
+}
+
+// Floating glass bar: name on the left, section links in the middle, CV + Contact on the right.
+// Under 1000px the links move into the + menu.
 export function Header() {
+  const path = usePath()
+  const active = useActiveSection(path)
+  const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
   const [closing, setClosing] = useState(false)
   const close = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(scrollY > 24)
+    onScroll()
+    addEventListener('scroll', onScroll, { passive: true })
+    return () => removeEventListener('scroll', onScroll)
+  }, [])
 
   const doClose = (restoreFocus = true) => {
     setClosing(true)
@@ -24,7 +54,7 @@ export function Header() {
     setTimeout(() => {
       setOpen(false)
       setClosing(false)
-      if (restoreFocus) [...document.querySelectorAll<HTMLElement>('.plus')].find((b) => b.offsetParent)?.focus()
+      if (restoreFocus) document.querySelector<HTMLElement>('.plus')?.focus()
     }, ms)
   }
 
@@ -45,32 +75,40 @@ export function Header() {
     return () => removeEventListener('keydown', onKey)
   }, [open])
 
-  const plus = (
-    <button type="button" className="plus" aria-expanded={open} aria-controls="site-menu" aria-label="Open menu" onClick={() => setOpen(true)}>
-      <span aria-hidden="true">+</span>
-    </button>
-  )
-
   return (
-    <header className="site-header">
-      {/* small screens */}
-      <div className="topbar">
+    <header className={`nav${scrolled ? ' is-scrolled' : ''}`}>
+      <div className="nav__bar">
         <Link to="/" className="brand">
-          <span aria-hidden="true">©</span> {identity.wordmark}
+          <span className="brand__mark" aria-hidden="true">
+            NH
+          </span>
+          <span className="brand__name">{identity.wordmark}</span>
         </Link>
-        {plus}
-      </div>
-      {/* desktop rails */}
-      <div className="rail rail--left">
-        <Link to="/#contact" className="rail__reach">
-          Reach out
-        </Link>
-      </div>
-      <div className="rail rail--right">
-        <span className="rail__plus">{plus}</span>
-        <Link to="/" className="brand brand--vertical">
-          <span aria-hidden="true">©</span> {identity.wordmark}
-        </Link>
+        <nav className="nav__links" aria-label="Sections">
+          <ul>
+            {NAV.map((n) => (
+              <li key={n.to}>
+                <Link to={n.to} className={active === n.to.split('#')[1] ? 'is-active' : undefined} aria-current={active === n.to.split('#')[1] ? 'location' : undefined}>
+                  <Icon name={n.icon} size={16} />
+                  {n.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        <div className="nav__actions">
+          {links.resume && (
+            <a className="btn btn--ghost btn--sm nav__cv" href={href(`/${links.resume}`)} download>
+              <Icon name="download" size={16} /> CV
+            </a>
+          )}
+          <Link to="/contact" className="btn btn--primary btn--sm">
+            Contact <Icon name="arrow" size={16} />
+          </Link>
+          <button type="button" className="plus" aria-expanded={open} aria-controls="site-menu" aria-label="Open menu" onClick={() => setOpen(true)}>
+            <span aria-hidden="true">+</span>
+          </button>
+        </div>
       </div>
 
       {open && (
@@ -78,16 +116,14 @@ export function Header() {
           <div className="menu__bg" onClick={() => doClose()} />
           <div className="menu__panel">
             <div className="menu__top">
-              <span className="brand">
-                <span aria-hidden="true">©</span> {identity.wordmark}
-              </span>
+              <span className="brand">{identity.wordmark}</span>
               <button ref={close} type="button" className="menu__x" aria-label="Close menu" onClick={() => doClose()}>
                 <span aria-hidden="true">×</span>
               </button>
             </div>
             <nav aria-label="Main">
               <ul>
-                {NAV.map((n, i) => (
+                {[{ to: '/', label: 'Home' }, ...NAV, { to: '/contact', label: 'Contact' }].map((n, i) => (
                   <li key={n.to} style={{ '--i': i } as CSSProperties}>
                     <Link to={n.to} onClick={() => doClose(false)}>
                       {n.label}

@@ -13,3 +13,6 @@ output "distribution_id" {
 output "custom_url" {
   value = "https://${var.domain_name}"
 }
+output "contact_api" {
+  value = "https://${var.domain_name}/api/contact"
+}

@@ -100,6 +100,19 @@ resource "aws_cloudfront_distribution" "site" {
     origin_access_control_id = aws_cloudfront_origin_access_control.site.id
   }
 
+  # Contact form API (contact.tf), served under the same domain at /api/*.
+  origin {
+    origin_id   = "contact-api"
+    domain_name = replace(aws_apigatewayv2_api.contact.api_endpoint, "https://", "")
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+
   # Everything except /assets/*: pages and unhashed files, with the SPA rewrite.
   default_cache_behavior {
     target_origin_id           = "site-bucket"
@@ -126,6 +139,18 @@ resource "aws_cloudfront_distribution" "site" {
     compress                   = true
     cache_policy_id            = data.aws_cloudfront_cache_policy.optimized.id
     response_headers_policy_id = aws_cloudfront_response_headers_policy.site["assets"].id
+  }
+
+  # POST /api/contact goes to API Gateway: never cached, no SPA rewrite.
+  ordered_cache_behavior {
+    path_pattern               = "/api/*"
+    target_origin_id           = "contact-api"
+    viewer_protocol_policy     = "https-only"
+    allowed_methods            = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+    cached_methods             = ["GET", "HEAD"]
+    cache_policy_id            = data.aws_cloudfront_cache_policy.disabled.id
+    origin_request_policy_id   = data.aws_cloudfront_origin_request_policy.all_viewer_except_host.id
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.site["pages"].id
   }
 
   restrictions {

@@ -30,8 +30,6 @@ jobs:
       - run: npm run check
 
       # Exchanges the OIDC token for 1-hour credentials of the deploy role. No stored keys.
-            # TEMPORARY: prints what GitHub's OIDC token claims, to compare with the role's trust policy.
-      # Only the claims are printed, never the token. Remove this step once deploys work.
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}

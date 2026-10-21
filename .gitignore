@@ -33,3 +33,4 @@ crash.log
 !*.tfvars.example
 *.tfplan
 crash.log
+infra/.build/

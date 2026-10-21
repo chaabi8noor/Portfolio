@@ -24,7 +24,7 @@ export const links = {
   resume: 'Chaabi_Nour_El_Houda_CV.pdf' as string | null, // path under /public
 }
 
-export const availability: string | null = 'Seeking a 6-month PFE (end-of-studies internship), available from January 2027.'
+export const availability: string | null = 'Seeking a 6-month end-of-studies internship from January 2027 · Open to relocation.'
 
 // Hero cut-out: the owner's supplied photo with its background removed. Face untouched.
 export const heroPhoto = {
@@ -54,27 +54,29 @@ export const capabilities: Capability[] = [
     icon: 'cube',
     title: 'Containers & Kubernetes',
     body: 'Containerizing applications and running them on reproducible Kubernetes environments packaged with Helm.',
-    tags: ['Docker', 'Docker Compose', 'Kubernetes', 'Helm'],
+    tags: ['Docker', 'Docker Compose', 'Podman', 'Kubernetes', 'Helm'],
   },
   {
     icon: 'shield',
     title: 'Security & Observability',
     body: 'Preventive gates, runtime detection and the metrics and alerts that show what a system is actually doing.',
-    tags: ['Falco', 'Kyverno', 'Trivy', 'Cilium', 'Prometheus', 'Grafana', 'Alertmanager'],
+    tags: ['Falco', 'Kyverno', 'Trivy', 'Cilium', 'Prometheus', 'Grafana', 'Alertmanager', 'Zabbix'],
   },
 ]
 
 export const languagesCode = ['Python', 'Bash/Shell', 'YAML', 'FastAPI', 'Git']
 
-export type Job = { org: string; role: string; when: string; where: string; points: string[]; project?: string }
+export type Job = { org: string; role: string; when: string; where: string; points: string[]; tags: string[]; badge: string; project?: string }
 
 // From the CV's "Professional Experience & Projects". `project` links to a case study.
 export const experience: Job[] = [
   {
     org: 'FelCloud',
+    badge: 'FC',
     role: 'Cloud Infrastructure & DevOps Intern',
-    when: 'Jul – Aug 2026',
+    when: 'Summer 2026',
     where: 'Remote',
+    tags: ['OpenStack', 'Pulumi', 'Zuul', 'GitLab CI', 'pytest-xdist'],
     points: [
       'Deployed a private OpenStack infrastructure with Pulumi (IaC): 10 VMs, 76 resources, a dedicated network and SNAT router.',
       'Isolated services by role with a bastion-host architecture, 6 security groups and 2 anti-affinity groups.',
@@ -83,8 +85,10 @@ export const experience: Job[] = [
   },
   {
     org: '3LM Solution',
+    badge: '3LM',
     role: 'DevOps Intern',
-    when: 'Jun – Jul 2026',
+    when: 'Summer 2026',
+    tags: ['Docker Compose', 'GitHub Actions', 'Trivy', 'Gitleaks', 'Prometheus', 'Grafana'],
     where: 'Remote',
     points: [
       'Containerized a full-stack application (FastAPI, React, MariaDB) with Docker and Docker Compose.',
@@ -94,9 +98,11 @@ export const experience: Job[] = [
   },
   {
     org: 'ESPRIT · KubeAIOps Platform',
+    badge: 'KA',
     role: 'DevOps/MLOps Intern',
-    when: 'Jul – Aug 2026',
+    when: 'Summer 2026',
     where: 'Remote',
+    tags: ['FastAPI', 'Kubernetes', 'Helm', 'Kind', 'GitLab CI', 'k6'],
     project: 'kubeaiops-capacity',
     points: [
       'Developed a FastAPI service for Kubernetes capacity recommendation based on traffic forecasts and CPU utilization.',
@@ -106,13 +112,43 @@ export const experience: Job[] = [
   },
   {
     org: 'OpenStack Cloud Infrastructure with AI',
+    badge: 'OS',
     role: 'Academic project',
     when: '',
     where: 'ESPRIT',
+    tags: ['OpenStack', 'Azure', 'Terraform', 'Ansible', 'Kubernetes'],
     points: [
       'Automated an OpenStack deployment with Terraform and Ansible in a hybrid setup (OpenStack backend, Azure frontend), with anomaly detection and AI-based autoscaling.',
       'Developed a full-stack B2B platform (Angular, Spring Boot), containerized with Docker and orchestrated on Kubernetes.',
       'Integrated Azure Copilot so the Kubernetes cluster can be queried in natural language about its status and resources.',
     ],
+  },
+]
+
+export const basedIn = 'Tunis, Tunisia · open to relocation'
+
+// From the CV's "Education", "Languages" and "Activities".
+export const education = [
+  { badge: 'ES', school: 'ESPRIT', where: 'Tunis', when: '2024 – 2027', what: 'Engineering degree, Cloud Engineering specialization' },
+  { badge: 'IP', school: 'IPEIB', where: 'Bizerte', when: '2022 – 2024', what: 'Preparatory classes, Mathematics–Physics (MP)' },
+]
+export const spokenLanguages = ['French · C1', 'English · C1', 'Arabic · Native']
+export const activities = ['Member, JCI (Junior Chamber International)', 'Former member, IEEE ESPRIT Student Branch']
+
+// Tool logos (Devicon / Simple Icons SVGs, self-hosted under /public/logos). No logo → monogram tile.
+export type Tool = { name: string; logo?: string }
+export const toolbox: { group: string; tools: Tool[] }[] = [
+  { group: 'Cloud', tools: [{ name: 'AWS', logo: 'amazonwebservices' }, { name: 'OpenStack', logo: 'openstack' }, { name: 'Azure', logo: 'azure' }] },
+  { group: 'Infrastructure as Code', tools: [{ name: 'Terraform', logo: 'terraform' }, { name: 'Pulumi', logo: 'pulumi' }, { name: 'Ansible', logo: 'ansible' }] },
+  {
+    group: 'CI/CD & GitOps',
+    tools: [{ name: 'GitLab CI/CD', logo: 'gitlab' }, { name: 'GitHub Actions', logo: 'githubactions' }, { name: 'Jenkins', logo: 'jenkins' }, { name: 'Argo CD', logo: 'argocd' }, { name: 'Zuul' }],
+  },
+  { group: 'Containers', tools: [{ name: 'Docker', logo: 'docker' }, { name: 'Kubernetes', logo: 'kubernetes' }, { name: 'Helm', logo: 'helm' }, { name: 'Podman', logo: 'podman' }] },
+  { group: 'Security', tools: [{ name: 'Falco', logo: 'falco' }, { name: 'Trivy', logo: 'trivy' }, { name: 'Cilium', logo: 'cilium' }, { name: 'Kyverno' }] },
+  { group: 'Observability', tools: [{ name: 'Prometheus', logo: 'prometheus' }, { name: 'Grafana', logo: 'grafana' }, { name: 'Zabbix', logo: 'zabbix' }] },
+  {
+    group: 'Systems & code',
+    tools: [{ name: 'Linux', logo: 'linux' }, { name: 'Bash', logo: 'bash' }, { name: 'Python', logo: 'python' }, { name: 'FastAPI', logo: 'fastapi' }, { name: 'YAML', logo: 'yaml' }, { name: 'Git', logo: 'git' }],
   },
 ]

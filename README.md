@@ -1,8 +1,8 @@
 # Chaabi Nour El Houda · Portfolio
 
-The portfolio of **Chaabi Nour El Houda**, a DevOps & Cloud engineering student. Layout inspired by td-tomasfolio.framer.website (giant name, cut-out portrait, capability rows, big project cards, full-bleed footer with a giant email) in a deep navy + sky blue cloud palette.
+The portfolio of **Chaabi Nour El Houda**, a DevOps & Cloud engineering student. Deep navy + sky blue palette: giant name and cut-out portrait, a tool-logo strip, bento toolbox, experience timeline, project case studies and a contact page.
 
-React + TypeScript + Vite. It builds to a static site, with no backend, no analytics and no runtime API calls.
+React + TypeScript + Vite, built to a static site with no analytics. The only backend is the contact form (`/api/contact`: API Gateway → Lambda → Amazon SES).
 
 ## Run it
 
@@ -37,10 +37,11 @@ Rules the content follows:
 src/
   content/        site.ts, projects.ts   ← edit these
   components/     Header, Home (all sections), CaseStudy (+ architecture explorer),
-                  PipelineLab, Art (pixel icons, architecture miniatures, glyphs)
-  lib/            router.tsx (tiny history router), pipeline.ts (pure demo-pipeline model)
+                  Contact (form → /api/contact), Icon, Art (pixel icons, architecture miniatures)
+  lib/            router.tsx (tiny history router), motion.ts (scroll reveals, spotlight)
   styles.css      design tokens on :root + all styles
-tests/            pipeline.test.ts (plain node:assert)
+public/logos/     tool logos (Devicon, MIT; Simple Icons, CC0)
+tests/            contact.test.ts (contact backend validation, plain node:assert)
 ```
 
 ## Hosting (AWS, Terraform)
@@ -57,6 +58,7 @@ Live at **https://chaabinourelhouda.com**. Everything is in `infra/`:
 | `domain.tf` | ACM certificate (DNS-validated) and Route 53 alias records for the domain and `www`. |
 | `github_oidc.tf` | GitHub OIDC provider + least-privilege deploy role (main branch of this repo only). |
 | `budget.tf` | $5/month budget with email alerts. |
+| `contact.tf` + `lambda/contact/` | Contact form: SES (DKIM-signed domain), Lambda, throttled API Gateway route, served by CloudFront at `/api/*`. |
 
 Make infra changes from `infra/`: `terraform init`, `terraform plan`, `terraform apply`. Copy `terraform.tfvars.example` to `terraform.tfvars` (git-ignored) first.
 
@@ -66,10 +68,7 @@ Deploys: `.github/workflows/deploy.yml` runs on every push to `main`. It builds 
 
 - All diagrams and the favicon are original inline SVGs written for this site. The project miniatures are drawn from the architecture data in `projects.ts`.
 - `public/me/hero.webp` is the owner's supplied photo with its background and lettering removed (rembg cut-outs merged + colour key restricted to the lettering band; face untouched).
-- `public/me/headshot.webp` is the owner's own portrait with the background replaced (rembg cut-out, composited on a generated studio gradient, resampled 2× with Lanczos). The face is not retouched or generated.
 - Fonts are self-hosted through Fontsource: Space Grotesk (500/700), IBM Plex Sans (400/600) and IBM Plex Mono 400, both under the SIL Open Font License.
-- No stock art or third-party images are used.
+- Tool logos come from Devicon (MIT) and Simple Icons (CC0); the Zabbix mark is a simple drawn tile. No stock art.
 - Design inspiration: td-tomasfolio.framer.website (layout and rhythm). No artwork or copy was reused; colours, icons and diagrams are original.
 
-
-The Lab section's pipeline is a **simulation**. `src/lib/pipeline.ts` is a pure state machine with hard-coded, clearly fake logs. It runs no commands, calls no cloud API and reflects no real repository.

@@ -29,6 +29,11 @@ export function useMotion(key: string) {
       const vh = innerHeight
       const photo = document.querySelector<HTMLElement>('.hero__photo-wrap')
       if (photo && scrollY < vh * 2) photo.style.transform = `translate3d(0, ${scrollY * 0.4}px, 0)`
+      // Experience timeline: the sky line fills as the list scrolls past 60% of the screen.
+      document.querySelectorAll<HTMLElement>('.tl').forEach((tl) => {
+        const r = tl.getBoundingClientRect()
+        tl.style.setProperty('--tl', Math.min(1, Math.max(0, (vh * 0.6 - r.top) / r.height)).toFixed(4))
+      })
       document.querySelectorAll<HTMLElement>('.card__zoom').forEach((z) => {
         const r = z.parentElement!.getBoundingClientRect()
         if (r.bottom < 0 || r.top > vh) return
@@ -36,6 +41,15 @@ export function useMotion(key: string) {
         z.style.transform = `scale(${(1 + 0.1 * t).toFixed(4)})`
       })
     }
+    // Cursor spotlight on cards: a soft sky glow follows the pointer inside any .spot element.
+    const onPointer = (e: PointerEvent) => {
+      const el = (e.target as Element | null)?.closest<HTMLElement>('.spot')
+      if (!el) return
+      const r = el.getBoundingClientRect()
+      el.style.setProperty('--mx', `${e.clientX - r.left}px`)
+      el.style.setProperty('--my', `${e.clientY - r.top}px`)
+    }
+    addEventListener('pointermove', onPointer, { passive: true })
     const onScroll = () => {
       if (!frame) frame = requestAnimationFrame(update)
     }
@@ -47,6 +61,7 @@ export function useMotion(key: string) {
       cancelAnimationFrame(frame)
       removeEventListener('scroll', onScroll)
       removeEventListener('resize', onScroll)
+      removeEventListener('pointermove', onPointer)
     }
   }, [key])
 }
